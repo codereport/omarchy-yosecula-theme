@@ -1,0 +1,25 @@
+# Yosecula
+
+Yosecula is a dark [Omarchy](https://omarchy.org/) theme with a palette inspired by [Dracula](https://draculatheme.com/) and an original Yosemite-inspired wallpaper. Its name pairs Yosemite with Dracula.
+
+## Install
+
+```bash
+omarchy theme install https://github.com/codereport/omarchy-yosecula-theme
+```
+
+Then select **Yosecula** from Omarchy's theme menu, or run:
+
+```bash
+omarchy theme set yosecula
+```
+
+## Contents
+
+- `colors.toml` defines the theme's dark palette.
+- `backgrounds/` contains the wallpaper used by the theme.
+- `preview.png` shows the theme on a desktop and appears in Omarchy's theme selector.
+
+## Credits
+
+The color palette is inspired by the Dracula color scheme. The wallpaper was created for this theme from [Hu Nhu's Half Dome photograph](https://commons.wikimedia.org/wiki/File:Glacier_Point_View_of_Half_Dome_at_Sunset_at_Yosemite_National_Park.jpg), which the photographer released under CC0. This repository is an independent community theme for Omarchy.
