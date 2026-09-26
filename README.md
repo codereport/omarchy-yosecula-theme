@@ -4,7 +4,7 @@ Yosecula is a dark [Omarchy](https://omarchy.org/) theme with a palette inspired
 
 ## Preview
 
-[![Yosecula wallpaper with the Dracula mascot and rounded palette swatches in the lower-left corner](preview.png?v=2)](preview.png)
+[![Yosecula wallpaper with the Dracula mascot and rounded palette swatches in the lower-left corner](readme-preview.png)](preview.png)
 
 The Dracula mascot and color swatches sit in the lower-left corner, leaving the purple sky and Half Dome visible. [Open the full-size preview](preview.png).
 
