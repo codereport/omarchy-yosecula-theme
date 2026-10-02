@@ -1,5 +1,5 @@
 {
-  "rain_color_gradient": ["5051b6", "815db6", "c076bf"],
-  "highlight_color": "ffd1ed",
-  "final_gradient_stops": ["5051b6", "815db6", "c076bf"]
+  "rain_color_gradient": ["5051b6", "815db6", "fc83a3"],
+  "highlight_color": "ffa5a4",
+  "final_gradient_stops": ["5051b6", "815db6", "fc83a3"]
 }
