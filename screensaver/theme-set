@@ -1,0 +1,4 @@
+#!/bin/bash
+# Managed by Yosecula. Refresh the installed screensaver after theme updates.
+[[ ${1,,} == yosecula ]] || exit 0
+exec python3 "$HOME/.config/omarchy/themes/yosecula/screensaver.py"
