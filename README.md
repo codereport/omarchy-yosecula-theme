@@ -36,12 +36,14 @@ python3 "$HOME/.config/omarchy/themes/yosecula/screensaver.py"
 
 [post-omarchy-install](https://github.com/codereport/post-omarchy-install) runs this installer automatically as part of Essential. The theme owns the launchers, artwork, idle service, menu action, dependency installation, and a `theme-set` hook that refreshes them when Yosecula is selected again. Changed files are backed up under `~/.local/state/yosecula/backups/`. Audit without applying changes with `screensaver.py --check`; add `--json` for machine-readable state and diffs.
 
-The screensaver runs in Foot with software rendering at 60 FPS, reducing GPU pressure on multiple monitors. It starts after 10 idle minutes and locks after 20; playing VLC inhibits both timers. Existing bar, presentation widgets, and other shell settings are preserved. After installation, Matrix remains the configured screensaver when you switch themes.
+The screensaver shows white Matrix rain over your current desktop wallpaper, without blur or dimming. It runs in Foot with software rendering at 60 FPS, reducing GPU pressure on multiple monitors. It starts after 10 idle minutes and locks after 20; playing VLC inhibits both timers. Existing bar, presentation widgets, and other shell settings are preserved. After installation, Matrix remains the configured screensaver when you switch themes.
+
+The installer adds a dedicated transparent Foot config and a Hyprland rule loaded from `~/.config/hypr/matrix-screensaver.lua`. Hyprland keeps the screensaver fullscreen while reporting a windowed state to Foot, which otherwise disables transparency in fullscreen. Desktop windows and the bar stay hidden; only the wallpaper appears behind the rain. The installer reloads Hyprland when these rules change in a running session.
 
 ## Contents
 
 - `colors.toml` defines the theme's dark palette.
-- `matrix.json` defines the rain gradient, bright tips, and final text gradient using six-digit RGB hex colors. The blue, violet, and pink rain colors were sampled from the wallpaper's sky.
+- `matrix.json` defines the white rain, bright tips, and final text using six-digit RGB hex colors.
 - `screensaver.py` installs and audits the screensaver integration in `screensaver/`.
 - `backgrounds/` contains the wallpaper used by the theme.
 - `preview.png` shows the wallpaper, Dracula mascot, and color palette and appears in Omarchy's theme selector.

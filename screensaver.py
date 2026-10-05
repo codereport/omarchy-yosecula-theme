@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -14,6 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PACKAGES = ("foot", "ttfx", "jq", "socat")
+HYPRLAND_INCLUDE = 'dofile(os.getenv("HOME") .. "/.config/hypr/matrix-screensaver.lua")'
 
 
 def configured_shell(current: dict) -> dict:
@@ -49,6 +51,15 @@ def desired_files(home: Path) -> list[tuple[Path, bytes, bool]]:
     files = []
     for name in ("omarchy-launch-matrix-screensaver", "omarchy-screensaver-matrix"):
         files.append((home / ".local/bin" / name, (ROOT / "screensaver/matrix" / name).read_bytes(), True))
+    files.append((home / ".config/omarchy/matrix/screensaver.ini",
+                  (ROOT / "screensaver/matrix/screensaver.ini").read_bytes(), False))
+    files.append((home / ".config/hypr/matrix-screensaver.lua",
+                  (ROOT / "screensaver/matrix/screensaver.lua").read_bytes(), False))
+    hyprland = home / ".config/hypr/hyprland.lua"
+    content = hyprland.read_text() if hyprland.exists() else ""
+    if HYPRLAND_INCLUDE not in (line.strip() for line in content.splitlines()):
+        content = content.rstrip() + "\n\n-- Yosecula Matrix screensaver over the desktop wallpaper.\n" + HYPRLAND_INCLUDE + "\n"
+    files.append((hyprland, content.encode(), False))
     files.append((home / ".config/omarchy/branding/screensaver.txt",
                   (ROOT / "screensaver/matrix/screensaver.txt").read_bytes(), False))
     for source in sorted((ROOT / "screensaver/cph.idle").iterdir()):
@@ -117,6 +128,7 @@ def install(home: Path) -> Path | None:
     files = desired_files(home)
     backup_root = home / ".local/state/yosecula/backups" / datetime.now().strftime("%Y%m%d-%H%M%S-%f")
     backed_up = False
+    hyprland_changed = False
     for target, content, executable in files:
         if target.is_symlink() or (target.exists() and not target.is_file()):
             raise ValueError(f"refusing to replace conflicting path: {target}")
@@ -131,6 +143,10 @@ def install(home: Path) -> Path | None:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(content)
         target.chmod(0o755 if executable else 0o644)
+        if target.parent == home / ".config/hypr":
+            hyprland_changed = True
+    if hyprland_changed and home == Path.home() and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        subprocess.run(["hyprctl", "reload"], check=True)
     return backup_root if backed_up else None
 
 
@@ -151,7 +167,7 @@ def main() -> int:
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f"Yosecula screensaver installation failed: {error}")
         return 1
-    print("Yosecula Matrix screensaver installed (Foot, 60 FPS, VLC playback inhibition).")
+    print("Yosecula Matrix screensaver installed (wallpaper background, Foot, 60 FPS, VLC playback inhibition).")
     if backup_root:
         print(f"Previous files backed up under {backup_root}.")
     return 0

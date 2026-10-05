@@ -21,6 +21,9 @@ class ScreensaverInstallTests(unittest.TestCase):
         self.addCleanup(patch.stop)
 
     def test_install_preserves_other_settings_and_is_idempotent(self):
+        hyprland = self.home / ".config/hypr/hyprland.lua"
+        hyprland.parent.mkdir(parents=True)
+        hyprland.write_text('-- Personal rules\no.window("webcam-viewer", { float = true })\n')
         shell = self.home / ".config/omarchy/shell.json"
         shell.parent.mkdir(parents=True)
         shell.write_text(json.dumps({"version": 1, "bar": {"centerAnchor": "cph.clock"},
@@ -37,6 +40,10 @@ class ScreensaverInstallTests(unittest.TestCase):
         self.assertEqual((backup / shell.relative_to(self.home)).read_text(),
                          json.dumps({"version": 1, "bar": {"centerAnchor": "cph.clock"},
                                      "plugins": [{"id": "cph.presentations"}]}))
+        self.assertEqual((backup / hyprland.relative_to(self.home)).read_text(),
+                         '-- Personal rules\no.window("webcam-viewer", { float = true })\n')
+        self.assertIn('o.window("webcam-viewer", { float = true })', hyprland.read_text())
+        self.assertEqual(hyprland.read_text().count(screensaver.HYPRLAND_INCLUDE), 1)
         data = json.loads(shell.read_text())
         self.assertEqual(data["bar"], {"centerAnchor": "cph.clock"})
         self.assertIn({"id": "cph.presentations"}, data["plugins"])
@@ -53,6 +60,28 @@ class ScreensaverInstallTests(unittest.TestCase):
         self.assertTrue(launcher.stat().st_mode & 0o111)
         self.assertTrue(hook.stat().st_mode & 0o111)
         self.assertIsNone(screensaver.install(self.home))
+
+    def test_install_reloads_running_hyprland_only_when_its_config_changes(self):
+        with mock.patch.object(screensaver.Path, "home", return_value=self.home), \
+             mock.patch.dict(screensaver.os.environ, {"HYPRLAND_INSTANCE_SIGNATURE": "test"}), \
+             mock.patch.object(screensaver.subprocess, "run") as run:
+            screensaver.install(self.home)
+            run.assert_called_once_with(["hyprctl", "reload"], check=True)
+            run.reset_mock()
+            self.assertIsNone(screensaver.install(self.home))
+            run.assert_not_called()
+
+    def test_audit_repairs_missing_wallpaper_rules_without_losing_personal_rules(self):
+        screensaver.install(self.home)
+        hyprland = self.home / ".config/hypr/hyprland.lua"
+        hyprland.write_text('-- Updated personal rules\no.window("my-app", { float = true })\n')
+        rules = hyprland.parent / "matrix-screensaver.lua"
+        rules.unlink()
+        self.assertEqual(screensaver.audit(self.home)["state"], "missing")
+        screensaver.install(self.home)
+        self.assertEqual(screensaver.audit(self.home)["state"], "ok")
+        self.assertIn('o.window("my-app", { float = true })', hyprland.read_text())
+        self.assertEqual(hyprland.read_text().count(screensaver.HYPRLAND_INCLUDE), 1)
 
     def test_conflicts_and_invalid_shell_block_before_files_are_changed(self):
         launcher = self.home / ".local/bin/omarchy-launch-matrix-screensaver"
