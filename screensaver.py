@@ -53,6 +53,11 @@ def desired_files(home: Path) -> list[tuple[Path, bytes, bool]]:
         files.append((home / ".local/bin" / name, (ROOT / "screensaver/matrix" / name).read_bytes(), True))
     files.append((home / ".config/omarchy/matrix/screensaver.ini",
                   (ROOT / "screensaver/matrix/screensaver.ini").read_bytes(), False))
+    files.append((home / ".config/omarchy/matrix/glyphs.json",
+                  (ROOT / "screensaver/matrix/glyphs.json").read_bytes(), False))
+    for source in sorted((ROOT / "screensaver/matrix/fonts").iterdir()):
+        if source.is_file():
+            files.append((home / ".local/share/fonts/yosecula" / source.name, source.read_bytes(), False))
     files.append((home / ".config/hypr/matrix-screensaver.lua",
                   (ROOT / "screensaver/matrix/screensaver.lua").read_bytes(), False))
     hyprland = home / ".config/hypr/hyprland.lua"
@@ -102,9 +107,12 @@ def audit(home: Path) -> dict:
         executable_changed = bool(target.stat().st_mode & 0o111) != executable
         if current != desired or executable_changed:
             changed.append(target)
-            diff = difflib.unified_diff(current.decode().splitlines(), desired.decode().splitlines(),
-                                       fromfile=f"{target} (current)", tofile=f"{target} (desired)", lineterm="")
-            explanations.append("\n".join(diff))
+            try:
+                diff = difflib.unified_diff(current.decode().splitlines(), desired.decode().splitlines(),
+                                           fromfile=f"{target} (current)", tofile=f"{target} (desired)", lineterm="")
+                explanations.append("\n".join(diff))
+            except UnicodeDecodeError:
+                explanations.append(f"Replace {target} ({len(current)} → {len(desired)} bytes).")
             if executable_changed:
                 explanations.append(f"{target}: executable {not executable} → {executable}")
     if missing_packages:
@@ -129,6 +137,7 @@ def install(home: Path) -> Path | None:
     backup_root = home / ".local/state/yosecula/backups" / datetime.now().strftime("%Y%m%d-%H%M%S-%f")
     backed_up = False
     hyprland_changed = False
+    fonts_changed = False
     for target, content, executable in files:
         if target.is_symlink() or (target.exists() and not target.is_file()):
             raise ValueError(f"refusing to replace conflicting path: {target}")
@@ -145,6 +154,10 @@ def install(home: Path) -> Path | None:
         target.chmod(0o755 if executable else 0o644)
         if target.parent == home / ".config/hypr":
             hyprland_changed = True
+        if target.suffix == ".ttf" and target.parent == home / ".local/share/fonts/yosecula":
+            fonts_changed = True
+    if fonts_changed and home == Path.home():
+        subprocess.run(["fc-cache", "-f", str(home / ".local/share/fonts/yosecula")], check=True)
     if hyprland_changed and home == Path.home() and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         subprocess.run(["hyprctl", "reload"], check=True)
     return backup_root if backed_up else None

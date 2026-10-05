@@ -40,10 +40,13 @@ The screensaver shows white Matrix rain over your current desktop wallpaper, wit
 
 The installer adds a dedicated transparent Foot config and a Hyprland rule loaded from `~/.config/hypr/matrix-screensaver.lua`. Hyprland keeps the screensaver fullscreen while reporting a windowed state to Foot, which otherwise disables transparency in fullscreen. Desktop windows and the bar stay hidden; only the wallpaper appears behind the rain. The installer reloads Hyprland when these rules change in a running session.
 
+The rain uses 305 distinct symbols from Dyalog APL, Kap, BQN, Uiua, and TinyAPL, collected from [Array Box](https://github.com/codereport/array-box)'s keyboard maps, glyph names, and primitive references. The installer includes Array Box's APL387 and Uiua386 fonts so every symbol renders. Only individual printable Unicode characters are included; multi-character tokens and function names are skipped. Refresh the committed glyph snapshot with `node screensaver/matrix/update-glyphs.mjs ../array-box`; the installed screensaver does not need Node or an Array Box checkout.
+
 ## Contents
 
 - `colors.toml` defines the theme's dark palette.
 - `matrix.json` defines the white rain, bright tips, and final text using six-digit RGB hex colors.
+- `screensaver/matrix/glyphs.json` contains the combined array language symbols; `fonts/` in the same directory contains their fonts and license notices.
 - `screensaver.py` installs and audits the screensaver integration in `screensaver/`.
 - `backgrounds/` contains the wallpaper used by the theme.
 - `preview.png` shows the wallpaper, Dracula mascot, and color palette and appears in Omarchy's theme selector.

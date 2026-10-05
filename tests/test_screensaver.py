@@ -66,10 +66,24 @@ class ScreensaverInstallTests(unittest.TestCase):
              mock.patch.dict(screensaver.os.environ, {"HYPRLAND_INSTANCE_SIGNATURE": "test"}), \
              mock.patch.object(screensaver.subprocess, "run") as run:
             screensaver.install(self.home)
-            run.assert_called_once_with(["hyprctl", "reload"], check=True)
+            self.assertEqual(run.call_args_list, [
+                mock.call(["fc-cache", "-f", str(self.home / ".local/share/fonts/yosecula")], check=True),
+                mock.call(["hyprctl", "reload"], check=True),
+            ])
             run.reset_mock()
             self.assertIsNone(screensaver.install(self.home))
             run.assert_not_called()
+
+    def test_binary_font_drift_is_audited_and_repaired(self):
+        screensaver.install(self.home)
+        font = self.home / ".local/share/fonts/yosecula/APL387.ttf"
+        font.write_bytes(b"\xffbroken font")
+        status = screensaver.audit(self.home)
+        self.assertEqual(status["state"], "drift")
+        self.assertIn(f"Replace {font}", status["explanation"])
+        backup = screensaver.install(self.home)
+        self.assertEqual((backup / font.relative_to(self.home)).read_bytes(), b"\xffbroken font")
+        self.assertEqual(screensaver.audit(self.home)["state"], "ok")
 
     def test_audit_repairs_missing_wallpaper_rules_without_losing_personal_rules(self):
         screensaver.install(self.home)
@@ -121,13 +135,17 @@ class ScreensaverInstallTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("jq"), "jq is needed to read theme palettes")
 class MatrixPaletteTests(unittest.TestCase):
-    def run_matrix(self, palette):
+    def run_matrix(self, palette, glyphs=None):
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary)
             if palette is not None:
                 path = home / ".local/state/omarchy/current/theme/matrix.json"
                 path.parent.mkdir(parents=True)
                 path.write_text(palette)
+            if glyphs is not None:
+                path = home / ".config/omarchy/matrix/glyphs.json"
+                path.parent.mkdir(parents=True)
+                path.write_text(glyphs)
             bin_dir = home / "bin"
             bin_dir.mkdir()
             commands = {
@@ -170,6 +188,25 @@ class MatrixPaletteTests(unittest.TestCase):
             with self.subTest(palette=palette):
                 args = self.run_matrix(palette)
                 self.assertEqual(args[args.index("matrix") + 1:], [])
+
+    def test_array_language_glyphs_reach_matrix_as_individual_unicode_arguments(self):
+        glyphs = json.loads((screensaver.ROOT / "screensaver/matrix/glyphs.json").read_text())
+        args = self.run_matrix(None, json.dumps(glyphs))
+        self.assertEqual(args[args.index("--rain-symbols") + 1:], glyphs)
+        self.assertIn("𝕩", glyphs)
+        self.assertIn("⍺", glyphs)
+        self.assertIn("⫽", glyphs)
+        self.assertIn("⧈", glyphs)
+        self.assertIn("߹", glyphs)
+        self.assertIn("\\", glyphs)
+        self.assertIn("-", glyphs)
+
+    def test_invalid_glyph_lists_use_the_stock_symbols(self):
+        for glyphs in ("{bad json", "{}", "[]", '["--no-color"]', '[" "]', '["\\n"]',
+                       '["\u0301"]', '["\u0000"]', '[42]'):
+            with self.subTest(glyphs=glyphs):
+                args = self.run_matrix(None, glyphs)
+                self.assertNotIn("--rain-symbols", args)
 
 
 if __name__ == "__main__":

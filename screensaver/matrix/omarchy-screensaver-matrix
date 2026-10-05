@@ -17,6 +17,16 @@ matrix_theme_args() {
   ' "$palette" 2>/dev/null
 }
 
+matrix_symbol_args() {
+  local glyphs="$HOME/.config/omarchy/matrix/glyphs.json"
+  [[ -r $glyphs ]] || return 0
+  jq -er '
+    select(type == "array" and length > 0
+      and all(.[]; type == "string" and length == 1 and test("^[^\\s\\p{M}\\p{Cc}]$")))
+    | "--rain-symbols", .[]
+  ' "$glyphs" 2>/dev/null
+}
+
 screensaver_in_focus() {
   hyprctl activewindow -j | jq -e '.class == "org.omarchy.screensaver"' >/dev/null 2>&1
 }
@@ -51,9 +61,10 @@ wait_for_terminal_resize
 while true; do
   # Read the active theme each cycle. Missing or invalid palettes use green.
   mapfile -t matrix_args < <(matrix_theme_args)
+  mapfile -t symbol_args < <(matrix_symbol_args)
   ttfx -i ~/.config/omarchy/branding/screensaver.txt \
     --frame-rate 60 --canvas-width 0 --canvas-height 0 --reuse-canvas --anchor-canvas c --anchor-text c\
-    --no-eol --no-restore-cursor matrix "${matrix_args[@]}" &
+    --no-eol --no-restore-cursor matrix "${matrix_args[@]}" "${symbol_args[@]}" &
 
   while pgrep -t "${tty#/dev/}" -x ttfx >/dev/null; do
     if read -n1 -t 1 || ! screensaver_in_focus; then
