@@ -1,0 +1,4 @@
+#!/bin/bash
+# Managed by Yosecula. Reapply the desktop fonts when this theme is selected.
+[[ ${1,,} == yosecula ]] || exit 0
+exec python3 "$HOME/.config/omarchy/themes/yosecula/fonts.py"

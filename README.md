@@ -28,6 +28,14 @@ Then select **Yosecula** from Omarchy's theme menu, or run:
 omarchy theme set yosecula
 ```
 
+To apply the matching desktop fonts, run:
+
+```bash
+python3 "$HOME/.config/omarchy/themes/yosecula/fonts.py"
+```
+
+This sets regular and monospace GTK app text to **JetBrainsMono Nerd Font 11** and title bars to **JetBrainsMono Nerd Font Bold 11**. It installs `ttf-jetbrains-mono-nerd` if the family is unavailable, and a `theme-set` hook reapplies the settings whenever Yosecula is selected. [post-omarchy-install](https://github.com/codereport/post-omarchy-install) audits and applies this automatically in Essential through `up`. Changed settings are saved in `desktop-fonts.json` under `~/.local/state/yosecula/backups/`. Run from a logged-in desktop session; reopen apps that keep their previous font. Preview with `fonts.py --check`, or `fonts.py --check --json` for machine-readable state and explanations.
+
 To install the matching Matrix rain screensaver, run:
 
 ```bash
@@ -48,6 +56,7 @@ The rain uses 305 distinct symbols from Dyalog APL, Kap, BQN, Uiua, and TinyAPL,
 - `matrix.json` defines the white rain, bright tips, and final text using six-digit RGB hex colors.
 - `screensaver/matrix/glyphs.json` contains the combined array language symbols; `fonts/` in the same directory contains their fonts and license notices.
 - `screensaver.py` installs and audits the screensaver integration in `screensaver/`.
+- `fonts.py` installs and audits the desktop font settings and the theme-change hook in `fonts/`.
 - `backgrounds/` contains the wallpaper used by the theme.
 - `preview.png` shows the wallpaper, Dracula mascot, and color palette and appears in Omarchy's theme selector.
 - `desktop-screenshot.webp` shows Yosecula on a real desktop and was submitted for the Omarchy themes site.
