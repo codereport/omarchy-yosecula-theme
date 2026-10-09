@@ -20,7 +20,7 @@ HYPRLAND_INCLUDE = 'dofile(os.getenv("HOME") .. "/.config/hypr/matrix-screensave
 
 def configured_shell(current: dict) -> dict:
     desired = json.loads(json.dumps(current))
-    desired.setdefault("idle", {}).update({"screensaver": 600, "lock": 1200,
+    desired.setdefault("idle", {}).update({"screensaver": 600, "lock": 1800,
                                           "inhibitVlcPlayback": True})
     plugins = desired.setdefault("plugins", [])
     if not any(item.get("id") == "cph.idle" for item in plugins):

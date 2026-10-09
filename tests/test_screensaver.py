@@ -48,7 +48,7 @@ class ScreensaverInstallTests(unittest.TestCase):
         self.assertEqual(data["bar"], {"centerAnchor": "cph.clock"})
         self.assertIn({"id": "cph.presentations"}, data["plugins"])
         self.assertIn({"id": "cph.idle"}, data["plugins"])
-        self.assertEqual(data["idle"], {"screensaver": 600, "lock": 1200, "inhibitVlcPlayback": True})
+        self.assertEqual(data["idle"], {"screensaver": 600, "lock": 1800, "inhibitVlcPlayback": True})
         self.assertIn("omarchy.idle", data["disabledPlugins"])
         self.assertIn("// Personal apps", menu.read_text())
         self.assertIn('"personal": {"label": "Personal"}', menu.read_text())
